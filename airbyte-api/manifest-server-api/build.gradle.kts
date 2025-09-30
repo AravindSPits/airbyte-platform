@@ -45,7 +45,7 @@ dependencies {
   testImplementation(libs.kotlin.test.runner.junit5)
 }
 
-val openapiSpecFilePath: String = "${layout.buildDirectory.get()}/openapi/manifest-server-openapi.yaml"
+val openapiSpecFilePath: String = file("build/openapi/manifest-server-openapi.yaml").toURI().toString()
 val remoteSpecUrl = "https://raw.githubusercontent.com/airbytehq/airbyte-python-cdk/refs/tags/v7.2.0/airbyte_cdk/manifest_server/openapi.yaml"
 
 val downloadManifestServerSpec =
