@@ -1,23 +1,27 @@
-# Find the airbyte-webapp folder (which might be either inside oss/ or on the root)
-if [ -d "./oss/airbyte-webapp" ]; then
-  webappDir="./oss/airbyte-webapp"
-else
-  webappDir="./airbyte-webapp"
-fi
+@echo off
+REM Find the airbyte-webapp folder (which might be either inside oss/ or on the root)
+if exist ".\oss\airbyte-webapp" (
+    set webappDir=.\oss\airbyte-webapp
+) else (
+    set webappDir=.\airbyte-webapp
+)
 
-if [ -z "$(git diff --stat --staged "$webappDir")" ]; then
-  # There are no staged changes in the webapp folder, so we can skip the rest of this hook
-  exit 0
-fi
+REM Check if there are staged changes in the webapp folder
+git diff --stat --staged "%webappDir%" >nul 2>&1
+if %errorlevel% neq 0 (
+    REM There are no staged changes in the webapp folder, so we can skip the rest of this hook
+    exit /b 0
+)
 
-# Only run this pre-commit hook when npx is actually in the path.
-# Since CI will fail on linting issues anyway we consider this hook optional
-# and don't want to fail commits if the system doesn't have the requirements to run it.
-if command -v npx &> /dev/null; then
-  # Only run if `npx` is at least version 8, since earlier versions didn't support the --no flag
-  npxMajorVersion=$(npx --version | cut -d. -f1)
-  if [ "$npxMajorVersion" -ge "8" ]; then
-    # Find the path to the webapp by looking for the airbyte-webapp/package.json file and cd into the webapp folder
-    cd "$webappDir" && npx --no lint-staged
-  fi
-fi
+REM Only run this pre-commit hook when npx is actually in the path.
+REM Since CI will fail on linting issues anyway we consider this hook optional
+REM and don't want to fail commits if the system doesn't have the requirements to run it.
+where npx >nul 2>&1
+if %errorlevel% equ 0 (
+    REM Only run if npx is at least version 8, since earlier versions didn't support the --no flag
+    for /f "tokens=1 delims=." %%i in ('npx --version') do set npxMajorVersion=%%i
+    if %npxMajorVersion% geq 8 (
+        REM Find the path to the webapp by looking for the airbyte-webapp/package.json file and cd into the webapp folder
+        cd /d "%webappDir%" && npx --no lint-staged
+    )
+)
